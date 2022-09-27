@@ -1,3 +1,4 @@
+import os
 import requests
 from bs4 import BeautifulSoup
 from flask import Flask
@@ -130,10 +131,7 @@ def perso(url,sss,slope,par):
 def test():
     return("API active")
 
-# if __name__ == '__main__':
-#     app.run(host='0.0.0.0', port=5000, debug=True)
-
 if __name__ == "__main__":
-    from waitress import serve
-    serve(app, host="0.0.0.0", port=8080)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
              

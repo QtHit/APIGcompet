@@ -129,3 +129,7 @@ def perso(url,sss,slope,par):
 @app.route('/test', methods=['GET'])
 def test():
     return("API active")
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
+             

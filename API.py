@@ -4,28 +4,37 @@ from bs4 import BeautifulSoup
 from flask import Flask
 from flask_cors import CORS, cross_origin
 
-def fonction_neuvic(url):
+def fonction_infos(url):
 
     page = requests.get(url)
     soup = BeautifulSoup(page.content, 'html.parser')
+    soupourNom = soup.find_all("div",class_="refs date")
+    soupourGolf = soup.find_all("span",class_="refs date")
     soupourIndex = soup.find_all("strong")
-    indexffg = float(soupourIndex[2].string)
+    nom = soupourNom[0].string
+    golf = soupourGolf[0].string
+    golf = golf.split("-")[0]
+    sexe= nom.split(" ")[0]
+    indexffg = float(soupourIndex[1].string)
 
     #determination des coleurs de départ
-    if indexffg <= 11.4:
-        couleurDepart = "Blanc"
-        par = 70
-        sss = 69
-        slope = 140
-    else :
-        couleurDepart = "Jaune"
-        par = 70
-        sss = 68
-        slope = 125
+    if "M." in sexe:
+        if indexffg <= 11.4:
+            couleurDepart = "Blanc"
+        else :
+            couleurDepart = "Jaune"
+    else:
+        if indexffg <= 18.4:
+            couleurDepart = "Bleu"
+        else :
+            couleurDepart = "Rouge"
 
-    return(fonction_totale(url,sss,slope,par,"Neuvic",couleurDepart))
+    resultats=[]
+    resultats.append({"index":indexffg,"golf":golf,"couleurDepart":couleurDepart,"nom":nom,"sexe":sexe})
 
-def fonction_totale(url,sss,slope,par,NomParcourt,couleurDepart):
+    return(resultats)
+
+def fonction_totale(url,sss,slope,par):
 
     page = requests.get(url)
     soup = BeautifulSoup(page.content, 'html.parser')
@@ -37,7 +46,6 @@ def fonction_totale(url,sss,slope,par,NomParcourt,couleurDepart):
     index = 0.0
     futur_index7 = 0.000
     nom = soupourNom[0].string
-    prenom=nom.split(" ")[1]
 
     #extraction des vingt meilleurs scores
     i=0
@@ -99,7 +107,7 @@ def fonction_totale(url,sss,slope,par,NomParcourt,couleurDepart):
     
     #On est partis pour les calcules
     resultats=[]
-    resultats.append({"index":index,"parcourt":NomParcourt,"depart":couleurDepart,"phrase":phrase,"nom":nom})
+    resultats.append({"index":index,"phrase":phrase,"nom":nom})
     if(cptNbCompet!=20):
         return(resultats)
     i=int(score_min+1)
@@ -119,13 +127,13 @@ app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
-@app.route('/go/<url>', methods=['GET'])
+@app.route('/info/<url>', methods=['GET'])
 def go_url(url):
-    return (fonction_neuvic("https://pages.ffgolf.org/histoindex/fiche/"+url))
+    return (fonction_infos("https://pages.ffgolf.org/histoindex/fiche/"+url))
 
 @app.route('/perso/<url>/<sss>/<slope>/<par>', methods=['GET'])
 def perso(url,sss,slope,par):
-    return (fonction_totale("https://pages.ffgolf.org/histoindex/fiche/"+url,float(sss),float(slope),int(par),"perso","perso"))
+    return (fonction_totale("https://pages.ffgolf.org/histoindex/fiche/"+url,float(sss),float(slope),int(par)))
 
 @app.route('/test', methods=['GET'])
 def test():
